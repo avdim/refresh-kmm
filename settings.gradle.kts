@@ -1,4 +1,4 @@
-rootProject.name = "RssReader"
+rootProject.name = "refresh"
 
 pluginManagement {
     repositories {
@@ -10,4 +10,5 @@ pluginManagement {
 
 include(":androidApp")
 include(":shared")
+include(":server")
 

@@ -21,14 +21,14 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 //Network
-                implementation("io.ktor:ktor-client-core:${findProperty("version.ktor")}")
-                implementation("io.ktor:ktor-client-logging:${findProperty("version.ktor")}")
+                implementation("io.ktor:ktor-client-core:$KTOR_VERSION")
+                implementation("io.ktor:ktor-client-logging:$KTOR_VERSION")
                 //Coroutines
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:${findProperty("version.kotlinx.coroutines")}")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:$COROUTINE_VERSION")
                 //Logger
                 implementation("io.github.aakira:napier:2.1.0")
                 //JSON
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:${findProperty("version.kotlinx.serialization")}")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$SERIALIZATION_VERSION")
                 //Key-Value storage
                 implementation("com.russhwolf:multiplatform-settings:0.8")
             }
@@ -37,7 +37,7 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 //Network
-                implementation("io.ktor:ktor-client-okhttp:${findProperty("version.ktor")}")
+                implementation("io.ktor:ktor-client-okhttp:$KTOR_VERSION")
             }
         }
 
@@ -51,7 +51,7 @@ kotlin {
             //iosSimulatorArm64Main.dependsOn(this)
             dependencies {
                 //Network
-                implementation("io.ktor:ktor-client-ios:${findProperty("version.ktor")}")
+                implementation("io.ktor:ktor-client-ios:$KTOR_VERSION")
             }
         }
     }

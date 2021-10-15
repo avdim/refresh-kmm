@@ -11,3 +11,18 @@ local.properties
 xcuserdata/
 Pods/
 /androidApp/key
+
+
+###### Custom #############################
+.exclude
+
+
+###### Idea ###############################
+*.ipr
+*.iws
+
+###### Android #############################
+out/
+
+##### OS Specific ##########################
+Thumbs.db
