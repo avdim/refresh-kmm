@@ -11,4 +11,5 @@ pluginManagement {
 include(":androidApp")
 include(":shared")
 include(":server")
+include(":serialized-data")
 
