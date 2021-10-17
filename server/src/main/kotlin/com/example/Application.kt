@@ -5,6 +5,7 @@ import io.ktor.server.netty.*
 import com.example.plugins.*
 
 fun main() {
+    println(ru.tutu.TextLabel("test"))
     embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
         configureRouting()
         configureSerialization()
