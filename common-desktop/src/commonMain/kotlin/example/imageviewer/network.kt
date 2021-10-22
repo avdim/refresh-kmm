@@ -25,8 +25,7 @@ suspend fun getFirstState(userId:String, clientStorage: Map<String, ClientValue>
 val KEY_INPUT1 = "input1"
 
 fun renderServerState(state: ServerState, clientStorage: Map<String, ClientValue>): Node {
-    val encodedClientStorage = Json.encodeToString(clientStorage)
-    val decoded = Json.decodeFromString<Map<String, ClientValue>>(encodedClientStorage)
+    val decoded = clientStorage.toJson().parseToClientStorage()
     return verticalContainer {
         label("counter ${state.counter}")
         input("hint", KEY_INPUT1)

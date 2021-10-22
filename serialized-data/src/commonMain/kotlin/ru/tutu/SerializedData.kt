@@ -1,6 +1,7 @@
 package ru.tutu
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlin.jvm.JvmInline
@@ -53,3 +54,10 @@ data class FirstResponse(val sessionId: String, val state: Node)
 @Serializable
 data class ClientValue(val stringValue: String)
 
+fun Map<String, ClientValue>.toJson():String {
+    return Json.encodeToString(this)
+}
+
+fun String.parseToClientStorage():Map<String, ClientValue> {
+    return Json.decodeFromString<Map<String, ClientValue>>(this)
+}
