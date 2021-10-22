@@ -4,7 +4,6 @@ plugins {
     id("com.android.library")
     kotlin("multiplatform")
     id("org.jetbrains.compose")
-    kotlin("plugin.serialization")
 }
 
 kotlin {
@@ -17,7 +16,6 @@ kotlin {
                 api(compose.foundation)
                 api(compose.material)
                 implementation("io.ktor:ktor-client-core:1.4.1")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
                 implementation(project(":serialized-data"))
             }
         }
