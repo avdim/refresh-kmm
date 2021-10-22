@@ -24,6 +24,7 @@ import example.imageviewer.*
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
+import ru.tutu.*
 
 private sealed class RefreshViewState {
     object Loading : RefreshViewState()
@@ -152,38 +153,6 @@ sealed class Intent {
     data class ButtonPressed(val buttonId: Id) : Intent()
 }
 
-@Serializable
-sealed class Node() {
-    @Serializable
-    sealed class Leaf() : Node() {
-        @Serializable
-        data class Rectangle(val width: Int, val height: Int, val color: UInt) : Leaf()
-
-        @Serializable
-        data class Label(val text: String) : Leaf()
-
-        @Serializable
-        data class Button(val id: Id, val text: String) : Leaf()
-
-        @Serializable
-        data class Input(val hint: String, val storageKey: String) : Leaf()
-
-        @Serializable
-        data class Image(val imgUrl:String, val width: Int, val height: Int):Leaf()
-    }
-
-    @Serializable
-    sealed class Container() : Node() {
-        abstract val children: List<Node>
-
-        @Serializable
-        class H(override val children: List<Node>) : Container()
-
-        @Serializable
-        class V(override val children: List<Node>) : Container()
-    }
-}
-
 fun verticalContainer(lambda: NodeDsl.() -> Unit): Node = refreshViewDsl {
     verticalContainer {
         lambda()
@@ -234,7 +203,3 @@ interface NodeDsl {
     fun image(imgUrl: String, width: Int, height: Int)
     fun rectangle(width: Int, height: Int, color: UInt)
 }
-
-@JvmInline
-@Serializable
-value class Id(val value: String)

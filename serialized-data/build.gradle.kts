@@ -5,7 +5,7 @@ plugins {
 }
 
 kotlin {
-    jvm()
+    jvm("desktop")
     android()
 
     listOf(

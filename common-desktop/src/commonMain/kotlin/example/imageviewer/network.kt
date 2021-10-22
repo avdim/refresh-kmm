@@ -11,6 +11,10 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import ru.tutu.Id
+import ru.tutu.Node
+import ru.tutu.parseToNode
+import ru.tutu.toJson
 import kotlin.random.Random
 
 @Serializable
@@ -71,12 +75,10 @@ fun serverReducer(state: ServerState, clientStorage: Map<String, ClientValue>, i
 val mapSessionToServerState: MutableMap<String, ServerState> = mutableMapOf()//todo ConcurrentHashMap
 suspend fun networkReducer(sessionId: String, clientStorage: Map<String, ClientValue>, intent: Intent): Node {
     val state: ServerState = mapSessionToServerState[sessionId]
-        ?: return Node.Leaf.Label("Не найдена сессия. Пожалуйста перезапустите приложение")
+        ?: return Node.Leaf.Label("Session not found. Please restart Application")
 
     val newState = serverReducer(state, clientStorage, intent)
     mapSessionToServerState[sessionId] = newState
     val node = renderServerState(newState, clientStorage)
-    val encoded = Json.encodeToString(node)
-    val decoded = Json.decodeFromString(Node.serializer(), encoded)
-    return decoded
+    return node.toJson().parseToNode()
 }

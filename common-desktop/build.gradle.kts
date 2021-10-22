@@ -18,6 +18,7 @@ kotlin {
                 api(compose.material)
                 implementation("io.ktor:ktor-client-core:1.4.1")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0")
+                implementation(project(":serialized-data"))
             }
         }
         named("androidMain") {
