@@ -12,6 +12,7 @@ kotlin {
             dependencies {
                 implementation(compose.desktop.currentOs)
                 implementation(project(":common-desktop"))
+                implementation(project(":server"))
             }
         }
     }

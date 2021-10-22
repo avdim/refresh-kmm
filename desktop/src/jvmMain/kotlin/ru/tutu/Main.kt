@@ -6,13 +6,18 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.application
+import com.example.startServer
 import example.imageviewer.utils.getPreferredWindowSize
 import example.imageviewer.view.RefreshView
 
 suspend fun main() {
+    val serverClosable = startServer()
     application {
         Window(
-            onCloseRequest = ::exitApplication,
+            onCloseRequest = {
+                serverClosable.close()
+                exitApplication()
+            },
             title = "Refresh view",
             state = WindowState(
                 position = WindowPosition.Aligned(Alignment.Center),
