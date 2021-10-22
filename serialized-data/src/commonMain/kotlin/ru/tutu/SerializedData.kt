@@ -46,3 +46,10 @@ sealed class Node() {
 @JvmInline
 @Serializable
 value class Id(val value: String)
+
+@Serializable
+data class FirstResponse(val sessionId: String, val state: Node)
+
+@Serializable
+data class ClientValue(val stringValue: String)
+

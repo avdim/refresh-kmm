@@ -11,17 +11,8 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import ru.tutu.Id
-import ru.tutu.Node
-import ru.tutu.parseToNode
-import ru.tutu.toJson
+import ru.tutu.*
 import kotlin.random.Random
-
-@Serializable
-data class FirstResponse(val sessionId: String, val state: Node)
-
-@Serializable
-data class ClientValue(val stringValue: String)
 
 suspend fun getFirstState(userId:String, clientStorage: Map<String, ClientValue>): FirstResponse {
     delay(1000)
