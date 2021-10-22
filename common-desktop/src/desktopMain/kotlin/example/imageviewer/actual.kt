@@ -7,12 +7,9 @@ package example.imageviewer
 
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.toComposeImageBitmap
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import example.imageviewer.model.Picture
 import example.imageviewer.model.loadFullImage
 import example.imageviewer.utils.toByteArray
-import example.imageviewer.view.DragHandler
 import org.jetbrains.skia.Image
 
 actual suspend fun downloadImageBitmap(url: String): ImageBitmap {
