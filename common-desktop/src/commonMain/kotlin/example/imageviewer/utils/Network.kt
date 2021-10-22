@@ -22,16 +22,4 @@ import kotlinx.coroutines.async
 
 //import java.net.InetAddress
 
-fun isInternetAvailable(): Boolean {
-    return runBlocking {
-        try {
-            ktorHttpClient.head<String>("http://google.com")
-            true
-        } catch (e: Exception) {
-            println(e.message)
-            false
-        }
-    }
-}
-
 val ktorHttpClient = HttpClient {}

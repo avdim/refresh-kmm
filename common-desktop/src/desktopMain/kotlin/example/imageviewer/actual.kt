@@ -11,7 +11,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import example.imageviewer.model.Picture
 import example.imageviewer.model.loadFullImage
-import example.imageviewer.utils.cropBitmapByScale
 import example.imageviewer.utils.toByteArray
 import example.imageviewer.view.DragHandler
 import org.jetbrains.skia.Image
