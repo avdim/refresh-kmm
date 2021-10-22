@@ -22,7 +22,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import example.imageviewer.*
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import kotlin.jvm.JvmInline
 import ru.tutu.*
 
@@ -146,11 +145,6 @@ fun RenderNode(clientStorage:Map<String, ClientValue>, node: Node, sendIntent: (
             NetworkImage(node.imgUrl, node.width, node.height)
         }
     }.also { }
-}
-
-@Serializable
-sealed class Intent {
-    data class ButtonPressed(val buttonId: Id) : Intent()
 }
 
 fun verticalContainer(lambda: NodeDsl.() -> Unit): Node = refreshViewDsl {

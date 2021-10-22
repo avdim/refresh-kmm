@@ -61,3 +61,8 @@ fun Map<String, ClientValue>.toJson():String {
 fun String.parseToClientStorage():Map<String, ClientValue> {
     return Json.decodeFromString<Map<String, ClientValue>>(this)
 }
+
+@Serializable
+sealed class Intent {
+    data class ButtonPressed(val buttonId: Id) : Intent()
+}

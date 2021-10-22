@@ -1,4 +1,5 @@
 val KOTLIN_VERSION = "1.5.31"
+val COMPOSE_DESKTOP = "1.0.0-beta1"
 val SERIALIZATION_VERSION = "1.3.0"
 val COROUTINE_VERSION = "1.5.2-native-mt"
 val KTOR_VERSION = "1.6.4"

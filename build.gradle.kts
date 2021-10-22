@@ -1,7 +1,7 @@
 plugins {
     kotlin("plugin.serialization") version KOTLIN_VERSION apply false
     kotlin("multiplatform") version KOTLIN_VERSION apply false
-    id("org.jetbrains.compose") version "1.0.0-alpha4-build418" apply false
+    id("org.jetbrains.compose") version COMPOSE_DESKTOP apply false
 }
 
 buildscript {
