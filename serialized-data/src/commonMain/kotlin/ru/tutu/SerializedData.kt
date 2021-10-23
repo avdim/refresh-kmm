@@ -18,6 +18,24 @@ fun FirstResponse.toJson():String =
 fun String.parseToFirstResponse():FirstResponse =
     Json.decodeFromString(this)
 
+
+@Serializable
+sealed class ClientSideEffect() {
+    @Serializable
+    data class OpenBrowser(val url:String):ClientSideEffect()
+    @Serializable
+    object OpenOrder:ClientSideEffect()
+}
+
+@Serializable
+data class ReducerResult2(val state:Node, val sideEffects:List<ClientSideEffect>)
+
+fun ReducerResult2.toJson():String =
+    Json.encodeToString(this)
+
+fun String.parseToReducerResult():ReducerResult2 =
+    Json.decodeFromString(this)
+
 @Serializable
 sealed class Node() {
     @Serializable
@@ -80,7 +98,7 @@ fun String.parseToNetworkReducerRequestBody():NetworkReducerRequestBody =
     Json.decodeFromString(this)
 
 @Serializable
-data class FirstResponse(val sessionId: String, val state: Node)
+data class FirstResponse(val sessionId: String, val reducerResult: ReducerResult2)
 
 @Serializable
 data class ClientValue(val stringValue: String)

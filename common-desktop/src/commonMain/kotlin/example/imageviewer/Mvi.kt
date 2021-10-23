@@ -48,6 +48,7 @@ fun <S, A> createStore(init: S, reducer: Reducer<S, A>): Store<S, A> {
 
 typealias ReducerSE<S, A, SE> = (S, A) -> ReducerResult<S, SE>
 
+//todo use another ReducerResult
 class ReducerResult<S, SE>(val state: S, val sideEffects: List<SE> = emptyList())
 
 /**

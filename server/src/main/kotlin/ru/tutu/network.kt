@@ -6,6 +6,7 @@
 package ru.tutu
 
 import kotlinx.coroutines.delay
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
 suspend fun getFirstState(userId:String, clientStorage: Map<String, ClientValue>): FirstResponse {
@@ -13,7 +14,7 @@ suspend fun getFirstState(userId:String, clientStorage: Map<String, ClientValue>
     val session = Random.nextInt().toString()
     val state = ServerState(userId, 0)
     mapSessionToServerState[session] = state
-    return FirstResponse(session, renderServerState(state, clientStorage))
+    return FirstResponse(session, ReducerResult2(renderServerState(state, clientStorage), listOf()))
 }
 
 val KEY_INPUT1 = "input1"
@@ -53,25 +54,27 @@ data class ServerState(
  * Если возникнут вопросы - пишите в чат поддержки LINK
  * Частые вопросы в связи с коронавирусом (доп. текст)
  */
-fun serverReducer(state: ServerState, clientStorage: Map<String, ClientValue>, intent: Intent): ServerState {
-    return when (intent) {
+class ServerReducerResult(val state: ServerState, val sideEffects:List<ClientSideEffect>)
+fun serverReducer(state: ServerState, clientStorage: Map<String, ClientValue>, intent: Intent): ServerReducerResult {
+    val state = when (intent) {
         is Intent.ButtonPressed -> {
             state.copy(
                 counter = state.counter + 1
             )
         }
     }
+    return ServerReducerResult(state, listOf())
 }
 
-val mapSessionToServerState: MutableMap<String, ServerState> = mutableMapOf()//todo ConcurrentHashMap
-suspend fun networkReducer(sessionId: String, clientStorage: Map<String, ClientValue>, intent: Intent): Node {
+val mapSessionToServerState: MutableMap<String, ServerState> = ConcurrentHashMap()
+suspend fun networkReducer(sessionId: String, clientStorage: Map<String, ClientValue>, intent: Intent): ReducerResult2 {
     val state: ServerState = mapSessionToServerState[sessionId]
-        ?: return Node.Leaf.Label("Session not found. Please restart Application")
+        ?: return ReducerResult2(Node.Leaf.Label("Session not found. Please restart Application"), listOf())
 
-    val newState = serverReducer(state, clientStorage, intent)
-    mapSessionToServerState[sessionId] = newState
-    val node = renderServerState(newState, clientStorage)
-    return node.toJson().parseToNode()
+    val reducerResult = serverReducer(state, clientStorage, intent)
+    mapSessionToServerState[sessionId] = reducerResult.state
+    val node = renderServerState(reducerResult.state, clientStorage)
+    return ReducerResult2(node.toJson().parseToNode(), reducerResult.sideEffects)
 }
 
 @OptIn(ExperimentalStdlibApi::class)

@@ -28,6 +28,7 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import kotlinx.coroutines.launch
 import ru.tutu.*
+import ru.tutu.ReducerResult2
 
 private sealed class RefreshViewState {
     object Loading : RefreshViewState()
@@ -48,11 +49,10 @@ suspend fun getFirstState(userId:String, clientStorage: Map<String, ClientValue>
     }.parseToFirstResponse()
 }
 
-suspend fun networkReducer(sessionId: String, clientStorage: Map<String, ClientValue>, intent: Intent): Node {//todo заменить на Node + SideEffects
-    return ktorClient.post<String>("$SERVER_URL/$SERVER_PATH_NETWORK_REDUCER"){
+suspend fun networkReducer(sessionId: String, clientStorage: Map<String, ClientValue>, intent: Intent): Node =
+    ktorClient.post<String>("$SERVER_URL/$SERVER_PATH_NETWORK_REDUCER"){
         body = TextContent(NetworkReducerRequestBody(sessionId, clientStorage, intent).toJson(), ContentType.Application.Json)
-    }.parseToNode()
-}
+    }.parseToReducerResult().state
 
 @Composable
 fun RefreshView() {
@@ -63,7 +63,7 @@ fun RefreshView() {
     remember {
         APP_SCOPE.launch {
             val firstResponse = getFirstState("my UID", clientStorage)
-            val store: Store<Node, ClientIntent> = createStore(firstResponse.state) { s: Node, a: ClientIntent ->
+            val store: Store<Node, ClientIntent> = createStore(firstResponse.reducerResult.state) { s: Node, a: ClientIntent ->
                 when(a) {
                     is ClientIntent.UpdateClientStorage -> {
                         clientStorage = clientStorage.toMutableMap().also {
