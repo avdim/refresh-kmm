@@ -12,6 +12,12 @@ fun Node.toJson():String =
 fun String.parseToNode():Node =
     Json.decodeFromString(Node.serializer(), this)
 
+fun FirstResponse.toJson():String =
+    Json.encodeToString(this)
+
+fun String.parseToFirstResponse():FirstResponse =
+    Json.decodeFromString(this)
+
 @Serializable
 sealed class Node() {
     @Serializable
@@ -48,6 +54,31 @@ sealed class Node() {
 @Serializable
 value class Id(val value: String)
 
+val SERVER_PATH_FIRST_REQUEST = "first_state"
+val SERVER_PATH_NETWORK_REDUCER = "network_reducer"
+
+@Serializable
+data class FirstRequestBody(val userId: String, val clientStorage: Map<String, ClientValue>)
+
+fun FirstRequestBody.toJson():String =
+    Json.encodeToString(this)
+
+fun String.parseToFirstRequestBody():FirstRequestBody =
+    Json.decodeFromString(this)
+
+@Serializable
+data class NetworkReducerRequestBody(
+    val sessionId: String,
+    val clientStorage: Map<String, ClientValue>,
+    val intent: Intent
+)
+
+fun NetworkReducerRequestBody.toJson():String =
+    Json.encodeToString(this)
+
+fun String.parseToNetworkReducerRequestBody():NetworkReducerRequestBody =
+    Json.decodeFromString(this)
+
 @Serializable
 data class FirstResponse(val sessionId: String, val state: Node)
 
@@ -64,5 +95,6 @@ fun String.parseToClientStorage():Map<String, ClientValue> {
 
 @Serializable
 sealed class Intent {
+    @Serializable
     data class ButtonPressed(val buttonId: Id) : Intent()
 }

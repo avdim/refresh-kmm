@@ -8,7 +8,7 @@ group = "com.example"
 version = "0.0.1"
 application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=true")
-    mainClass.set("com.example.ApplicationKt")
+    mainClass.set("ru.tutu.ServerStarterKt")
 }
 
 repositories {

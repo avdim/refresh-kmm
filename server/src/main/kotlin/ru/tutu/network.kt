@@ -3,15 +3,13 @@
  * Use of this source code is governed by the Apache 2.0 license that can be found in the LICENSE.txt file.
  */
 
-package example.imageviewer
+package ru.tutu
 
-import example.imageviewer.view.*
 import kotlinx.coroutines.delay
-import ru.tutu.*
 import kotlin.random.Random
 
 suspend fun getFirstState(userId:String, clientStorage: Map<String, ClientValue>): FirstResponse {
-    delay(1000)
+    delay(300)
     val session = Random.nextInt().toString()
     val state = ServerState(userId, 0)
     mapSessionToServerState[session] = state
@@ -34,6 +32,13 @@ fun renderServerState(state: ServerState, clientStorage: Map<String, ClientValue
         }
     }
 }
+
+fun verticalContainer(lambda: NodeDsl.() -> Unit): Node = refreshViewDsl {
+    verticalContainer {
+        lambda()
+    }
+}.first()
+
 
 data class ServerState(
     val userId: String,
@@ -68,3 +73,49 @@ suspend fun networkReducer(sessionId: String, clientStorage: Map<String, ClientV
     val node = renderServerState(newState, clientStorage)
     return node.toJson().parseToNode()
 }
+
+@OptIn(ExperimentalStdlibApi::class)
+private fun refreshViewDsl(lambda: NodeDsl.() -> Unit): List<Node> {
+    return buildList<Node> {
+        object : NodeDsl {
+            override fun verticalContainer(lambda: NodeDsl.() -> Unit) {
+                add(Node.Container.V(refreshViewDsl(lambda)))
+            }
+
+            override fun horizontalContainer(lambda: NodeDsl.() -> Unit) {
+                add(Node.Container.H(refreshViewDsl(lambda)))
+            }
+
+            override fun button(id: Id, text: String) {
+                add(Node.Leaf.Button(id, text))
+            }
+
+            override fun input(hint: String, storageKey: String) {
+                add(Node.Leaf.Input(hint, storageKey))
+            }
+
+            override fun label(text: String) {
+                add(Node.Leaf.Label(text))
+            }
+
+            override fun rectangle(width: Int, height: Int, color: UInt) {
+                add(Node.Leaf.Rectangle(color = color, width = width, height = height))
+            }
+
+            override fun image(imgUrl: String, width: Int, height: Int) {
+                add(Node.Leaf.Image(imgUrl, width, height))
+            }
+        }.lambda()
+    }
+}
+
+interface NodeDsl {
+    fun verticalContainer(lambda: NodeDsl.() -> Unit)
+    fun horizontalContainer(lambda: NodeDsl.() -> Unit)
+    fun button(id: Id, text: String)
+    fun input(hint: String, storageKey: String)
+    fun label(text: String)
+    fun image(imgUrl: String, width: Int, height: Int)
+    fun rectangle(width: Int, height: Int, color: UInt)
+}
+

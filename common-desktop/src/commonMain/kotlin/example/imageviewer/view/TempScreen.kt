@@ -21,8 +21,12 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import example.imageviewer.*
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.http.content.*
 import kotlinx.coroutines.launch
-import kotlin.jvm.JvmInline
 import ru.tutu.*
 
 private sealed class RefreshViewState {
@@ -33,6 +37,21 @@ private sealed class RefreshViewState {
 sealed class ClientIntent() {
     class SendToServer(val intent: Intent):ClientIntent()
     data class UpdateClientStorage(val key: String, val value: ClientValue) : ClientIntent()
+}
+
+val ktorClient:HttpClient = HttpClient(CIO)
+val SERVER_URL = "http://localhost:8081"
+
+suspend fun getFirstState(userId:String, clientStorage: Map<String, ClientValue>): FirstResponse {
+    return ktorClient.post<String>("$SERVER_URL/${SERVER_PATH_FIRST_REQUEST}"){
+        body = TextContent(FirstRequestBody(userId, clientStorage).toJson(), ContentType.Application.Json)
+    }.parseToFirstResponse()
+}
+
+suspend fun networkReducer(sessionId: String, clientStorage: Map<String, ClientValue>, intent: Intent): Node {//todo заменить на Node + SideEffects
+    return ktorClient.post<String>("$SERVER_URL/$SERVER_PATH_NETWORK_REDUCER"){
+        body = TextContent(NetworkReducerRequestBody(sessionId, clientStorage, intent).toJson(), ContentType.Application.Json)
+    }.parseToNode()
 }
 
 @Composable
@@ -145,55 +164,4 @@ fun RenderNode(clientStorage:Map<String, ClientValue>, node: Node, sendIntent: (
             NetworkImage(node.imgUrl, node.width, node.height)
         }
     }.also { }
-}
-
-fun verticalContainer(lambda: NodeDsl.() -> Unit): Node = refreshViewDsl {
-    verticalContainer {
-        lambda()
-    }
-}.first()
-
-@OptIn(ExperimentalStdlibApi::class)
-private fun refreshViewDsl(lambda: NodeDsl.() -> Unit): List<Node> {
-    return buildList<Node> {
-        object : NodeDsl {
-            override fun verticalContainer(lambda: NodeDsl.() -> Unit) {
-                add(Node.Container.V(refreshViewDsl(lambda)))
-            }
-
-            override fun horizontalContainer(lambda: NodeDsl.() -> Unit) {
-                add(Node.Container.H(refreshViewDsl(lambda)))
-            }
-
-            override fun button(id: Id, text: String) {
-                add(Node.Leaf.Button(id, text))
-            }
-
-            override fun input(hint: String, storageKey: String) {
-                add(Node.Leaf.Input(hint, storageKey))
-            }
-
-            override fun label(text: String) {
-                add(Node.Leaf.Label(text))
-            }
-
-            override fun rectangle(width: Int, height: Int, color: UInt) {
-                add(Node.Leaf.Rectangle(color = color, width = width, height = height))
-            }
-
-            override fun image(imgUrl: String, width: Int, height: Int) {
-                add(Node.Leaf.Image(imgUrl, width, height))
-            }
-        }.lambda()
-    }
-}
-
-interface NodeDsl {
-    fun verticalContainer(lambda: NodeDsl.() -> Unit)
-    fun horizontalContainer(lambda: NodeDsl.() -> Unit)
-    fun button(id: Id, text: String)
-    fun input(hint: String, storageKey: String)
-    fun label(text: String)
-    fun image(imgUrl: String, width: Int, height: Int)
-    fun rectangle(width: Int, height: Int, color: UInt)
 }
