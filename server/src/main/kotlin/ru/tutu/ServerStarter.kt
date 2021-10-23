@@ -8,13 +8,16 @@ import io.ktor.http.content.*
 import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
+import kotlinx.coroutines.delay
 import ru.tutu.*
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.random.Random
 
 fun main() {
     configureServer().start(wait = true)
 }
 
-fun startServer():AutoCloseable {
+fun startServer(): AutoCloseable {
     val server = configureServer().start(wait = false)
     return AutoCloseable {
         server.stop(200, 400)
@@ -51,4 +54,28 @@ fun Application.configureRouting() {
             resources("static")
         }
     }
+}
+
+private val mapSessionToServerState: MutableMap<String, ServerState> = ConcurrentHashMap()
+
+private suspend fun getFirstState(userId: String, clientStorage: Map<String, ClientValue>): FirstResponse {
+    delay(300)
+    val session = Random.nextInt().toString()
+    val state = ServerState(userId, 0)
+    mapSessionToServerState[session] = state
+    return FirstResponse(session, ReducerResult2(serverRender(state, clientStorage), listOf()))
+}
+
+private suspend fun networkReducer(
+    sessionId: String,
+    clientStorage: Map<String, ClientValue>,
+    intent: Intent
+): ReducerResult2 {
+    val state: ServerState = mapSessionToServerState[sessionId]
+        ?: return ReducerResult2(Node.Leaf.Label("Session not found. Please restart Application"), listOf())
+
+    val reducerResult = serverReducer(state, clientStorage, intent)
+    mapSessionToServerState[sessionId] = reducerResult.state
+    val node = serverRender(reducerResult.state, clientStorage)
+    return ReducerResult2(node.toJson().parseToNode(), reducerResult.sideEffects)
 }
