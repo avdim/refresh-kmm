@@ -9,7 +9,9 @@ import io.ktor.request.*
 import io.ktor.response.*
 import io.ktor.routing.*
 import kotlinx.coroutines.delay
-import ru.tutu.*
+import ru.tutu.logic.ServerState
+import ru.tutu.logic.serverReducer
+import ru.tutu.logic.serverRender
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.random.Random
 
@@ -34,15 +36,15 @@ fun Application.configureRouting() {
         get("/") {
             call.respondText("Hello World 5!")
         }
-        post("/" + SERVER_PATH_FIRST_REQUEST) {
+        post(SERVER_PATH_FIRST_REQUEST) {
             val clientData = call.receiveText().parseToFirstRequestBody()
-            val result: FirstResponse = getFirstState(clientData.userId, clientData.clientStorage)
+            val result: FirstResponse = firstRequest(clientData.userId, clientData.clientStorage)
             call.respondText(
                 text = result.toJson(),
                 contentType = ContentType.Application.Json
             )
         }
-        post("/" + SERVER_PATH_NETWORK_REDUCER) {
+        post(SERVER_PATH_NETWORK_REDUCER) {
             val clientData = call.receiveText().parseToNetworkReducerRequestBody()
             val result = networkReducer(clientData.sessionId, clientData.clientStorage, clientData.intent)
             call.respondText(
@@ -58,7 +60,7 @@ fun Application.configureRouting() {
 
 private val mapSessionToServerState: MutableMap<String, ServerState> = ConcurrentHashMap()
 
-private suspend fun getFirstState(userId: String, clientStorage: Map<String, ClientValue>): FirstResponse {
+private suspend fun firstRequest(userId: String, clientStorage: Map<String, ClientValue>): FirstResponse {
     delay(300)
     val session = Random.nextInt().toString()
     val state = ServerState(userId, 0)

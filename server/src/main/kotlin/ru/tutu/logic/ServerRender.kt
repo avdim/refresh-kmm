@@ -1,27 +1,9 @@
-package ru.tutu
+package ru.tutu.logic
 
-/**
- * Внутренние представление State-а на сервере
- */
-data class ServerState(
-    val userId: String,
-    val counter: Int
-)
-
-class ServerReducerResult(val state: ServerState, val sideEffects: List<ClientSideEffect>)
-
-val KEY_INPUT1 = "input1"
-
-fun serverReducer(state: ServerState, clientStorage: Map<String, ClientValue>, intent: Intent): ServerReducerResult {
-    val result = when (intent) {
-        is Intent.ButtonPressed -> {
-            state.copy(
-                counter = state.counter + 1
-            )
-        }
-    }
-    return ServerReducerResult(result, listOf())
-}
+import ru.tutu.ClientValue
+import ru.tutu.Id
+import ru.tutu.Node
+import ru.tutu.verticalContainer
 
 /**
  * Внимание новые короновирусные ограничения
