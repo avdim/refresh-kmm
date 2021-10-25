@@ -28,72 +28,73 @@ import io.ktor.http.*
 import io.ktor.http.content.*
 import kotlinx.coroutines.launch
 import ru.tutu.*
-import ru.tutu.ReducerResult2
 
-private sealed class RefreshViewState {
-    object Loading : RefreshViewState()
-    data class Loaded(val store: Store<Node, ClientIntent>) : RefreshViewState()
+fun createRefreshViewStore(): Store<RefreshViewState, ClientIntent> {
+    val result = createStore(
+        RefreshViewState(
+            clientStorage = emptyMap()
+        )
+    ) {s, a: ClientIntent ->
+        val serverData = s.serverData
+        when (serverData) {
+            is RefreshViewState.ServerData.Loaded -> {
+                when (a) {
+                    is ClientIntent.UpdateClientStorage -> {
+                        s.copy(
+                            clientStorage = s.clientStorage.toMutableMap().also {
+                                it[a.key] = a.value
+                            }
+                        )
+                        //todo изменения отправлять на сервер
+                    }
+                    is ClientIntent.SendToServer -> {
+                        val reducedNode: Node = networkReducer(serverData.sessionId, s.clientStorage, a.intent)
+                        s.copy(
+                            serverData = serverData.copy(node = reducedNode)
+                        )
+                    }
+                    else -> throw Error("unpredictable state")
+                }
+            }
+            is RefreshViewState.ServerData.Loading -> {
+                when (a) {
+                    is ClientIntent.FirstServerResponse -> {
+                        s.copy(
+                            serverData = RefreshViewState.ServerData.Loaded(
+                                sessionId = a.sessionId,
+                                node = a.node
+                            )
+                        )
+                    }
+                    else -> throw Error("unpredictable state")
+                }
+            }
+        }
+    }
+    APP_SCOPE.launch {
+        val firstResponse = getFirstState("my UID", result.state.clientStorage)
+        result.send(ClientIntent.FirstServerResponse(firstResponse.reducerResult.state, firstResponse.sessionId))
+    }
+    return result
 }
-
-sealed class ClientIntent() {
-    class SendToServer(val intent: Intent):ClientIntent()
-    data class UpdateClientStorage(val key: String, val value: ClientValue) : ClientIntent()
-}
-
-val ktorClient:HttpClient = HttpClient(CIO)
-val SERVER_URL = "http://localhost:8081"
-
-suspend fun getFirstState(userId:String, clientStorage: Map<String, ClientValue>): FirstResponse {
-    return ktorClient.post<String>("$SERVER_URL/${SERVER_PATH_FIRST_REQUEST}"){
-        body = TextContent(FirstRequestBody(userId, clientStorage).toJson(), ContentType.Application.Json)
-    }.parseToFirstResponse()
-}
-
-suspend fun networkReducer(sessionId: String, clientStorage: Map<String, ClientValue>, intent: Intent): Node =
-    ktorClient.post<String>("$SERVER_URL/$SERVER_PATH_NETWORK_REDUCER"){
-        body = TextContent(NetworkReducerRequestBody(sessionId, clientStorage, intent).toJson(), ContentType.Application.Json)
-    }.parseToReducerResult().state
 
 @Composable
 fun RefreshView() {
-    var globalState: RefreshViewState by remember {
-        mutableStateOf(RefreshViewState.Loading)
-    }
-    var clientStorage by remember { mutableStateOf(emptyMap<String, ClientValue>()) }
-    remember {
-        APP_SCOPE.launch {
-            val firstResponse = getFirstState("my UID", clientStorage)
-            val store: Store<Node, ClientIntent> = createStore(firstResponse.reducerResult.state) { s: Node, a: ClientIntent ->
-                when(a) {
-                    is ClientIntent.UpdateClientStorage -> {
-                        clientStorage = clientStorage.toMutableMap().also {
-                            it[a.key] = a.value
-                        }
-                        //todo накапливать изменения и отправлять на сервер
-                        s
-                    }
-                    is ClientIntent.SendToServer -> {
-                        networkReducer(firstResponse.sessionId, clientStorage, a.intent)
-                    }
-                }
-            }
-            globalState = RefreshViewState.Loaded(store)
-        }
-    }
+    val store = remember { createRefreshViewStore() }
+    val globalState = store.stateFlow.collectAsState()
+    val serverData = globalState.value.serverData
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.TopCenter,
     ) {
-        globalState.let { s ->
-            when (s) {
-                is RefreshViewState.Loading -> {
-                    CircularProgressIndicator(strokeWidth = 8.dp)
-                }
-                is RefreshViewState.Loaded -> {
-                    val nodeState by s.store.stateFlow.collectAsState()
-                    RenderNode(clientStorage, nodeState) {
-                        s.store.send(it)
-                    }
+        when(serverData) {
+            is RefreshViewState.ServerData.Loading -> {
+                CircularProgressIndicator(strokeWidth = 8.dp)
+            }
+            is RefreshViewState.ServerData.Loaded -> {
+                val clientStorage = globalState.value.clientStorage
+                RenderNode(clientStorage, serverData.node) {
+                    store.send(it)
                 }
             }
         }
@@ -164,4 +165,35 @@ fun RenderNode(clientStorage:Map<String, ClientValue>, node: Node, sendIntent: (
             NetworkImage(node.imgUrl, node.width, node.height)
         }
     }.also { }
+}
+
+val ktorClient:HttpClient = HttpClient(CIO)
+val SERVER_URL = "http://localhost:8081"
+
+suspend fun getFirstState(userId:String, clientStorage: Map<String, ClientValue>): FirstResponse {
+    return ktorClient.post<String>("$SERVER_URL/${SERVER_PATH_FIRST_REQUEST}"){
+        body = TextContent(FirstRequestBody(userId, clientStorage).toJson(), ContentType.Application.Json)
+    }.parseToFirstResponse()
+}
+
+suspend fun networkReducer(sessionId: String, clientStorage: Map<String, ClientValue>, intent: Intent): Node =
+    ktorClient.post<String>("$SERVER_URL/$SERVER_PATH_NETWORK_REDUCER"){
+        body = TextContent(NetworkReducerRequestBody(sessionId, clientStorage, intent).toJson(), ContentType.Application.Json)
+    }.parseToReducerResult().state
+
+
+data class RefreshViewState(
+    val clientStorage: Map<String, ClientValue>,
+    val serverData: ServerData = ServerData.Loading
+) {
+    sealed class ServerData {
+        object Loading : ServerData()
+        data class Loaded(val sessionId: String, val node: Node) : ServerData()
+    }
+}
+
+sealed class ClientIntent() {
+    class SendToServer(val intent: Intent):ClientIntent()
+    data class UpdateClientStorage(val key: String, val value: ClientValue) : ClientIntent()
+    class FirstServerResponse(val node:Node, val sessionId: String):ClientIntent()
 }
